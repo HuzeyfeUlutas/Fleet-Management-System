@@ -1,0 +1,1 @@
+INSERT INTO delivery_points()

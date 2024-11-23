@@ -7,8 +7,6 @@ import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface DeliveryPointMapper {
-    DeliveryPoint INSTANCE = Mappers.getMapper(DeliveryPoint.class);
-
     DeliveryPointDto toDto(DeliveryPoint deliveryPoint);
     DeliveryPoint toEntity(DeliveryPointDto deliveryPointDto);
 

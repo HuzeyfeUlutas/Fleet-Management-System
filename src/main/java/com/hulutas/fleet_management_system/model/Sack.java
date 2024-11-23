@@ -2,6 +2,7 @@ package com.hulutas.fleet_management_system.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.hulutas.fleet_management_system.enums.PackageStatus;
 import com.hulutas.fleet_management_system.enums.SackStatus;
 import jakarta.persistence.*;
 
@@ -13,6 +14,9 @@ public class Sack {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(name = "status")
+    private Integer statusValue;
+    @Transient
     private SackStatus status;
     @Column(name = "barcode", columnDefinition = "VARCHAR(255)")
     private String barcode;
@@ -40,11 +44,12 @@ public class Sack {
     }
 
     public SackStatus getStatus() {
-        return status;
+        return SackStatus.fromValue(this.statusValue);
     }
 
     public void setStatus(SackStatus status) {
         this.status = status;
+        this.statusValue = status != null ? status.getValue() : null;
     }
 
     public String getBarcode() {

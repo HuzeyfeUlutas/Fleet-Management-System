@@ -10,6 +10,10 @@ public class Package {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "status")
+    private Integer statusValue;
+    @Transient
     private PackageStatus status;
     private String barcode;
     private int desi;
@@ -39,6 +43,15 @@ public class Package {
         this.vehicle = vehicle;
     }
 
+    public PackageStatus getStatus() {
+        return PackageStatus.fromValue(this.statusValue);
+    }
+
+    public void setStatus(PackageStatus status) {
+        this.status = status;
+        this.statusValue = status != null ? status.getValue() : null;
+    }
+
     public Package(Long id, PackageStatus status, String barcode, int desi, DeliveryPoint deliveryPoint, Sack sack) {
         this.id = id;
         this.status = status;
@@ -54,14 +67,6 @@ public class Package {
 
     public Long getId() {
         return id;
-    }
-
-    public PackageStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(PackageStatus status) {
-        this.status = status;
     }
 
     public String getBarcode() {

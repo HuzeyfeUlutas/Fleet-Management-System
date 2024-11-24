@@ -1,6 +1,7 @@
 package com.hulutas.fleet_management_system.service;
 
 import com.hulutas.fleet_management_system.dto.SackDto;
+import com.hulutas.fleet_management_system.model.Sack;
 
 import java.util.List;
 
@@ -15,4 +16,6 @@ public interface SackService {
     SackDto updateSack(SackDto sackDto);
 
     void deleteSack(Long id);
+
+    void saveSacks(List<Sack> sacks);
 }

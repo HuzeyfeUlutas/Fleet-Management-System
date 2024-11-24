@@ -33,6 +33,7 @@ public class DeliveryPointServiceImpl implements DeliveryPointService {
 
         return deliveryPoints.stream().map(deliveryPointMapper::toDto).collect(Collectors.toList());
     }
+
     @Override
     public DeliveryPointDto createDeliveryPoint(DeliveryPointDto deliveryPointDto) {
         DeliveryPoint deliveryPoint = new DeliveryPoint();
@@ -40,12 +41,14 @@ public class DeliveryPointServiceImpl implements DeliveryPointService {
         DeliveryPoint savedDeliveryPoint = deliveryPointRepository.save(deliveryPoint);
         return deliveryPointMapper.toDto(savedDeliveryPoint);
     }
+
     @Override
     public DeliveryPointDto getDeliveryPointById(Long id) {
         DeliveryPoint deliveryPoint = deliveryPointRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Deliverypoint not found with id: " + id));
 
         return deliveryPointMapper.toDto(deliveryPoint);
     }
+
     @Override
     public DeliveryPointDto updateDeliveryPoint(DeliveryPointDto deliveryPointDto) {
         deliveryPointRepository.findById(deliveryPointDto.id()).orElseThrow(() -> new ResourceNotFoundException("Deliverypoint not found with id:" + deliveryPointDto.id()));
@@ -56,6 +59,17 @@ public class DeliveryPointServiceImpl implements DeliveryPointService {
         return deliveryPointMapper.toDto(updatedDeliveryPoint);
 
     }
+
+    @Override
+    public boolean checkPackageIsAllowed(int deliveryPointId) {
+        return deliveryPointId != 3;
+    }
+
+    @Override
+    public boolean checkSackIsAllowed(int deliveryPointId) {
+        return deliveryPointId != 1;
+    }
+
     @Override
     public void deleteDeliveryPoint(Long id) {
         if (!deliveryPointRepository.existsById(id))

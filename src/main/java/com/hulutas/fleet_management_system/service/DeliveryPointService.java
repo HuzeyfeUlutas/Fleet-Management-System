@@ -13,5 +13,9 @@ public interface DeliveryPointService {
 
     DeliveryPointDto updateDeliveryPoint(DeliveryPointDto deliveryPointDto);
 
+    boolean checkPackageIsAllowed(int deliveryPointId);
+
+    boolean checkSackIsAllowed(int deliveryPointId);
+
     void deleteDeliveryPoint(Long id);
 }

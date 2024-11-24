@@ -13,6 +13,9 @@ import com.hulutas.fleet_management_system.model.Vehicle;
 import com.hulutas.fleet_management_system.repository.PackageRepository;
 import com.hulutas.fleet_management_system.repository.SackRepository;
 import com.hulutas.fleet_management_system.repository.VehicleRepository;
+import com.hulutas.fleet_management_system.service.DeliveryPointService;
+import com.hulutas.fleet_management_system.service.PackageService;
+import com.hulutas.fleet_management_system.service.SackService;
 import com.hulutas.fleet_management_system.service.VehicleService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,11 +31,17 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository vehicleRepository;
     private final SackRepository sackRepository;
     private final PackageRepository packageRepository;
+    private final DeliveryPointService deliveryPointService;
+    private final PackageService packageService;
+    private final SackService sackService;
 
-    public VehicleServiceImpl(VehicleRepository vehicleRepository, SackRepository sackRepository, PackageRepository packageRepository) {
+    public VehicleServiceImpl(VehicleRepository vehicleRepository, SackRepository sackRepository, PackageRepository packageRepository, DeliveryPointService deliveryPointService, PackageService packageService, SackService sackService) {
         this.vehicleRepository = vehicleRepository;
         this.packageRepository = packageRepository;
         this.sackRepository = sackRepository;
+        this.deliveryPointService = deliveryPointService;
+        this.packageService = packageService;
+        this.sackService = sackService;
     }
 
 
@@ -103,13 +112,38 @@ public class VehicleServiceImpl implements VehicleService {
             List<Package> packages = packageRepository.findByBarcodeIn(packageBarcodes);
             List<Sack> sacks = sackRepository.findByBarcodeIn(sackBarcodes);
 
+            packages.forEach(p -> {
+                if (p.getSack() != null){
+                    p.getSack().setStatus(SackStatus.LOADED);
+                }
+                p.setStatus(PackageStatus.LOADED);
+            });
+            sacks.forEach(s -> s.setStatus(SackStatus.LOADED));
+
+            packageService.savePackages(packages);
+            sackService.saveSacks(sacks);
+
             List<VehicleLoadDto> reponseVehicleDtos = new ArrayList<>();
             for (Package apackage : packages) {
-                apackage.setStatus(PackageStatus.LOADED);
                 if (apackage.getDeliveryPoint().getId() != routeDto.deliveryPoint()) {
                     System.out.println("Wrong location for barcode number: " + apackage.getBarcode() + " it must be " + apackage.getDeliveryPoint().getId() + " not be " + routeDto.deliveryPoint());
                     reponseVehicleDtos.add(new VehicleLoadDto(apackage.getBarcode(), apackage.getStatus().getValue()));
-                    break;
+                    continue;
+                }
+                if (apackage.getSack() != null) {
+                    if (!deliveryPointService.checkSackIsAllowed(routeDto.deliveryPoint())) {
+                        System.out.println("Packages in sack cannot be unloaded this location for barcode number: " + apackage.getBarcode());
+                        reponseVehicleDtos.add(new VehicleLoadDto(apackage.getBarcode(), apackage.getStatus().getValue()));
+                        continue;
+                    }
+                    apackage.setStatus(PackageStatus.UNLOADED);
+                    reponseVehicleDtos.add(new VehicleLoadDto(apackage.getBarcode(), apackage.getStatus().getValue()));
+                    continue;
+                }
+                if (!deliveryPointService.checkPackageIsAllowed(routeDto.deliveryPoint())) {
+                    System.out.println("Packages cannot be unloaded this location for barcode number: " + apackage.getBarcode());
+                    reponseVehicleDtos.add(new VehicleLoadDto(apackage.getBarcode(), apackage.getStatus().getValue()));
+                    continue;
                 }
                 apackage.setStatus(PackageStatus.UNLOADED);
                 reponseVehicleDtos.add(new VehicleLoadDto(apackage.getBarcode(), apackage.getStatus().getValue()));
@@ -117,7 +151,6 @@ public class VehicleServiceImpl implements VehicleService {
 
 
             for (Sack sack : sacks) {
-                sack.setStatus(SackStatus.LOADED);
                 for (Package sackpackage : sack.getaPackage()) {
                     sackpackage.setStatus(PackageStatus.LOADED);
                     if (sackpackage.getDeliveryPoint().getId() != routeDto.deliveryPoint())
@@ -127,13 +160,18 @@ public class VehicleServiceImpl implements VehicleService {
                 if (sack.getDeliveryPoint().getId() != routeDto.deliveryPoint()) {
                     System.out.println("Wrong location for barcode number: " + sack.getBarcode() + " it must be " + sack.getDeliveryPoint().getId() + " not be " + routeDto.deliveryPoint());
                     reponseVehicleDtos.add(new VehicleLoadDto(sack.getBarcode(), sack.getStatus().getValue()));
-                    break;
+                    continue;
+                }
+                if (!deliveryPointService.checkSackIsAllowed(routeDto.deliveryPoint())) {
+                    System.out.println("Sacks cannot be unloaded this location for barcode number: " + sack.getBarcode());
+                    reponseVehicleDtos.add(new VehicleLoadDto(sack.getBarcode(), sack.getStatus().getValue()));
+                    continue;
                 }
                 sack.setStatus(SackStatus.UNLOADED);
                 reponseVehicleDtos.add(new VehicleLoadDto(sack.getBarcode(), sack.getStatus().getValue()));
             }
 
-            response.route().add(new RouteDto(routeDto.deliveryPoint(),reponseVehicleDtos));
+            response.route().add(new RouteDto(routeDto.deliveryPoint(), reponseVehicleDtos));
 
 
         }

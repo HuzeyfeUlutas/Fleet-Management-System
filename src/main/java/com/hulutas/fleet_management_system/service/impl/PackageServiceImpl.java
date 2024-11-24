@@ -8,6 +8,8 @@ import com.hulutas.fleet_management_system.service.PackageService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -71,5 +73,11 @@ public class PackageServiceImpl implements PackageService {
             throw new ResourceNotFoundException("Package not found with id: " + id);
 
         packageRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void savePackages(List<Package> packages) {
+        packageRepository.saveAll(packages);
     }
 }

@@ -2,6 +2,7 @@ package com.hulutas.fleet_management_system.service.impl;
 
 import com.hulutas.fleet_management_system.dto.PackageDto;
 import com.hulutas.fleet_management_system.exception.ResourceNotFoundException;
+import com.hulutas.fleet_management_system.mapper.PackageMapper;
 import com.hulutas.fleet_management_system.model.Package;
 import com.hulutas.fleet_management_system.repository.PackageRepository;
 import com.hulutas.fleet_management_system.service.PackageService;
@@ -16,11 +17,13 @@ import java.util.stream.Collectors;
 
 @Service
 public class PackageServiceImpl implements PackageService {
-    private static final Logger logger = LoggerFactory.getLogger(DeliveryPointServiceImpl.class);
     private final PackageRepository packageRepository;
 
-    public PackageServiceImpl(PackageRepository packageRepository) {
+    private final PackageMapper packageMapper;
+
+    public PackageServiceImpl(PackageRepository packageRepository, PackageMapper packageMapper) {
         this.packageRepository = packageRepository;
+        this.packageMapper = packageMapper;
     }
 
 
@@ -31,40 +34,30 @@ public class PackageServiceImpl implements PackageService {
         if(packages.isEmpty())
             throw new ResourceNotFoundException("Packages not found");
 
-        return packages.stream().map(pack -> new PackageDto(pack.getId(),pack.getStatus(), pack.getBarcode(), pack.getDesi(), pack.getDeliveryPoint(), pack.getSack(), pack.getVehicle())).collect(Collectors.toList());
+        return packages.stream().map(packageMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
-    public PackageDto createPackage(PackageDto packageDtoDto) {
-        Package aPackage = new Package();
-        aPackage.setStatus(packageDtoDto.packageStatus());
-        aPackage.setBarcode(packageDtoDto.barcode());
-        aPackage.setDesi(packageDtoDto.desi());
-        aPackage.setDeliveryPoint(packageDtoDto.deliveryPoint());
-        aPackage.setVehicle(packageDtoDto.vehicle());
+    public PackageDto createPackage(PackageDto packageDto) {
+        Package aPackage = packageMapper.toEntity(packageDto);
         Package savedPackage = packageRepository.save(aPackage);
-        return new PackageDto(savedPackage.getId(), savedPackage.getStatus(), savedPackage.getBarcode(), savedPackage.getDesi(), savedPackage.getDeliveryPoint(), savedPackage.getSack(), savedPackage.getVehicle());
+        return packageMapper.toDto(savedPackage);
     }
 
     @Override
     public PackageDto getPackageById(Long id) {
         Package aPackage = packageRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Package not found with id: " + id));
 
-        return new PackageDto(aPackage.getId(), aPackage.getStatus(), aPackage.getBarcode(), aPackage.getDesi(), aPackage.getDeliveryPoint(), aPackage.getSack(), aPackage.getVehicle());
+        return packageMapper.toDto(aPackage);
     }
     @Override
     public PackageDto updatePackage(PackageDto packageDto) {
         Package apackage = packageRepository.findById(packageDto.id()).orElseThrow(() -> new ResourceNotFoundException("Package not found with id:" + packageDto.id()));
-        apackage.setVehicle(packageDto.vehicle());
-        apackage.setDeliveryPoint(packageDto.deliveryPoint());
-        apackage.setDesi(packageDto.desi());
-        apackage.setBarcode(packageDto.barcode());
-        apackage.setSack(packageDto.sack());
-        apackage.setStatus(packageDto.packageStatus());
+        Package entity = packageMapper.toEntity(packageDto);
 
-        Package updatedPackage = packageRepository.save(apackage);
+        Package updatedPackage = packageRepository.save(entity);
 
-        return new PackageDto(updatedPackage.getId(), updatedPackage.getStatus(), updatedPackage.getBarcode(), updatedPackage.getDesi(),updatedPackage.getDeliveryPoint(), updatedPackage.getSack(), updatedPackage.getVehicle());
+        return packageMapper.toDto(updatedPackage);
 
     }
     @Override

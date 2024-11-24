@@ -13,9 +13,9 @@ public record SackDto(
         SackStatus status,
         String barcode,
         @JsonIgnore
-        DeliveryPoint deliveryPoint,
+        DeliveryPointDto deliveryPoint,
         @JsonIgnore
-        List<Package> packages,
+        List<PackageDto> packages,
         @JsonIgnore
-        Vehicle vehicle) {
+        VehicleDto vehicle) {
 }

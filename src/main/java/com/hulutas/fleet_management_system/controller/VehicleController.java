@@ -19,12 +19,12 @@ public class VehicleController {
         this.vehicleService = vehicleService;
     }
 
-    @GetMapping
+    @GetMapping()
     public List<VehicleDto> getAllVehicles(){
         return vehicleService.getAllVehicle();
     }
 
-    @PostMapping()
+    @PostMapping
     public ResponseEntity<VehicleDto> createVehicle(@RequestBody VehicleDto vehicleDto) {
         return ResponseEntity.ok(vehicleService.createVehicle(vehicleDto));
     }

@@ -2,6 +2,7 @@ package com.hulutas.fleet_management_system.service.impl;
 
 import com.hulutas.fleet_management_system.dto.SackDto;
 import com.hulutas.fleet_management_system.exception.ResourceNotFoundException;
+import com.hulutas.fleet_management_system.mapper.SackMapper;
 import com.hulutas.fleet_management_system.model.Sack;
 import com.hulutas.fleet_management_system.repository.SackRepository;
 import com.hulutas.fleet_management_system.service.SackService;
@@ -19,9 +20,12 @@ public class SackServiceImpl implements SackService {
     private static final Logger logger = LoggerFactory.getLogger(SackServiceImpl.class);
     private final SackRepository sackRepository;
 
+    private final SackMapper sackMapper;
 
-    public SackServiceImpl(SackRepository sackRepository) {
+
+    public SackServiceImpl(SackRepository sackRepository, SackMapper sackMapper) {
         this.sackRepository = sackRepository;
+        this.sackMapper = sackMapper;
     }
 
     @Override
@@ -31,42 +35,32 @@ public class SackServiceImpl implements SackService {
         if(sacks.isEmpty())
             throw new ResourceNotFoundException("Sacks not found");
 
-        return sacks.stream().map(sack -> new SackDto(sack.getId() ,sack.getStatus(), sack.getBarcode(), sack.getDeliveryPoint(), sack.getaPackage(), sack.getVehicle())).collect(Collectors.toList());
+        return sacks.stream().map(sackMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
     public SackDto createSack(SackDto sackDto) {
-        Sack sack = new Sack();
-        sack.setaPackage(sackDto.packages());
-        sack.setBarcode(sackDto.barcode());
-        sack.setDeliveryPoint(sackDto.deliveryPoint());
-        sack.setVehicle(sackDto.vehicle());
-        sack.setStatus(sackDto.status());
+        Sack sack = sackMapper.toEntity(sackDto);
 
         Sack savedSack = sackRepository.save(sack);
-        return new SackDto(savedSack.getId(), savedSack.getStatus(), savedSack.getBarcode(), savedSack.getDeliveryPoint(), savedSack.getaPackage(), savedSack.getVehicle());
+        return sackMapper.toDto(savedSack);
     }
     @Override
     public SackDto getSackId(Long id) {
         Sack sack = sackRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Sack not found with id: " + id));
 
-        return new SackDto(sack.getId(), sack.getStatus(), sack.getBarcode(), sack.getDeliveryPoint(), sack.getaPackage(), sack.getVehicle());
+        return sackMapper.toDto(sack);
     }
 
     @Override
     public SackDto updateSack(SackDto sackDto) {
         Sack sack = sackRepository.findById(sackDto.id()).orElseThrow(() -> new ResourceNotFoundException("Sack not found with id:" + sackDto.id()));
-        sack.setStatus(sackDto.status());
-        sack.setVehicle(sackDto.vehicle());
-        sack.setDeliveryPoint(sackDto.deliveryPoint());
-        sack.setBarcode(sackDto.barcode());
-        sack.setaPackage(sackDto.packages());
+        Sack entity = sackMapper.toEntity(sackDto);
 
 
-        Sack updatedSack = sackRepository.save(sack);
+        Sack updatedSack = sackRepository.save(entity);
 
-        return new SackDto(updatedSack.getId(), updatedSack.getStatus(), updatedSack.getBarcode(), updatedSack.getDeliveryPoint(), updatedSack.getaPackage(), updatedSack.getVehicle());
-
+        return sackMapper.toDto(updatedSack);
     }
     @Override
     public void deleteSack(Long id) {

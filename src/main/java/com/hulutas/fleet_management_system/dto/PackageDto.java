@@ -12,9 +12,9 @@ public record PackageDto(
         String barcode,
         int desi,
         @JsonIgnore
-        DeliveryPoint deliveryPoint,
+        DeliveryPointDto deliveryPoint,
         @JsonIgnore
-        Sack sack,
+        SackDto sack,
         @JsonIgnore
-        Vehicle vehicle) {
+        VehicleDto vehicle) {
 }

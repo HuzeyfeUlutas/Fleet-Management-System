@@ -7,6 +7,7 @@ import com.hulutas.fleet_management_system.dto.VehicleLoadDto;
 import com.hulutas.fleet_management_system.enums.PackageStatus;
 import com.hulutas.fleet_management_system.enums.SackStatus;
 import com.hulutas.fleet_management_system.exception.ResourceNotFoundException;
+import com.hulutas.fleet_management_system.mapper.VehicleMapper;
 import com.hulutas.fleet_management_system.model.Package;
 import com.hulutas.fleet_management_system.model.Sack;
 import com.hulutas.fleet_management_system.model.Vehicle;
@@ -14,8 +15,6 @@ import com.hulutas.fleet_management_system.repository.PackageRepository;
 import com.hulutas.fleet_management_system.repository.SackRepository;
 import com.hulutas.fleet_management_system.repository.VehicleRepository;
 import com.hulutas.fleet_management_system.service.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -32,8 +31,9 @@ public class VehicleServiceImpl implements VehicleService {
     private final DeliveryPointService deliveryPointService;
     private final PackageService packageService;
     private final SackService sackService;
+    private final VehicleMapper vehicleMapper;
 
-    public VehicleServiceImpl(LogService logService, VehicleRepository vehicleRepository, SackRepository sackRepository, PackageRepository packageRepository, DeliveryPointService deliveryPointService, PackageService packageService, SackService sackService) {
+    public VehicleServiceImpl(LogService logService, VehicleRepository vehicleRepository, SackRepository sackRepository, PackageRepository packageRepository, DeliveryPointService deliveryPointService, PackageService packageService, SackService sackService, VehicleMapper vehicleMapper) {
         this.logService = logService;
         this.vehicleRepository = vehicleRepository;
         this.packageRepository = packageRepository;
@@ -41,6 +41,7 @@ public class VehicleServiceImpl implements VehicleService {
         this.deliveryPointService = deliveryPointService;
         this.packageService = packageService;
         this.sackService = sackService;
+        this.vehicleMapper = vehicleMapper;
     }
 
 
@@ -51,36 +52,32 @@ public class VehicleServiceImpl implements VehicleService {
         if (vehicles.isEmpty())
             throw new ResourceNotFoundException("Vehicles not found");
 
-        return vehicles.stream().map(vehicle -> new VehicleDto(vehicle.getId(), vehicle.getPlateNumber(), vehicle.getSacks(), vehicle.getPackages())).collect(Collectors.toList());
+        return vehicles.stream().map(vehicleMapper::toDto).collect(Collectors.toList());
     }
 
     @Override
     public VehicleDto createVehicle(VehicleDto vehicleDto) {
-        Vehicle vehicle = new Vehicle();
-        vehicle.setPlateNumber(vehicleDto.plateNumber());
-        vehicle.setPackages(vehicleDto.packages());
-        vehicle.setSacks(vehicleDto.sacks());
+        Vehicle vehicle = vehicleMapper.toEntity(vehicleDto);
         Vehicle savedVehicle = vehicleRepository.save(vehicle);
-        return new VehicleDto(savedVehicle.getId(), savedVehicle.getPlateNumber(), savedVehicle.getSacks(), savedVehicle.getPackages());
+
+        return vehicleMapper.toDto(savedVehicle);
     }
 
     @Override
     public VehicleDto getVehicleById(Long id) {
         Vehicle vehicle = vehicleRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id: " + id));
 
-        return new VehicleDto(vehicle.getId(), vehicle.getPlateNumber(), vehicle.getSacks(), vehicle.getPackages());
+        return vehicleMapper.toDto(vehicle);
     }
 
     @Override
     public VehicleDto updateVehicle(VehicleDto vehicleDto) {
         Vehicle vehicle = vehicleRepository.findById(vehicleDto.id()).orElseThrow(() -> new ResourceNotFoundException("Vehicle not found with id:" + vehicleDto.id()));
-        vehicle.setSacks(vehicleDto.sacks());
-        vehicle.setPackages(vehicleDto.packages());
-        vehicle.setPlateNumber(vehicleDto.plateNumber());
+        Vehicle entity = vehicleMapper.toEntity(vehicleDto);
 
-        Vehicle updateVehicle = vehicleRepository.save(vehicle);
+        Vehicle updateVehicle = vehicleRepository.save(entity);
 
-        return new VehicleDto(updateVehicle.getId(), updateVehicle.getPlateNumber(), updateVehicle.getSacks(), updateVehicle.getPackages());
+        return vehicleMapper.toDto(updateVehicle);
 
     }
 

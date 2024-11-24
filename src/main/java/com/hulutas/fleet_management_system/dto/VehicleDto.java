@@ -10,7 +10,7 @@ public record VehicleDto(
         Long id,
         String plateNumber,
         @JsonIgnore
-        List<Sack> sacks,
+        List<SackDto> sacks,
         @JsonIgnore
-        List<Package> packages) {
+        List<PackageDto> packages) {
 }

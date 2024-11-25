@@ -25,9 +25,6 @@ public class DatabaseLogServiceImpl implements LogService {
         logRepository.save(logEntry);
 
         switch (level.toUpperCase()) {
-            case "INFO":
-                logger.info(message);
-                break;
             case "ERROR":
                 logger.error(message);
                 break;

@@ -52,7 +52,7 @@ public class DeliveryPointServiceTest {
         List<DeliveryPointDto> result = deliveryPointService.getAllDeliveryPoints();
 
         assertNotNull(result);
-        // Assert
+
         assertEquals("destination", result.get(0).name());
     }
 
@@ -132,6 +132,52 @@ public class DeliveryPointServiceTest {
 
         verify(deliveryPointRepository, times(1)).findById(deliveryPointId);  // Verify the findById method was called once
         verify(deliveryPointRepository, times(1)).save(entity);
+    }
 
+    @Test
+    void testUpdateDeliveryPoint_shouldThrowExceptionWhenDeliveryNotFound() {
+        when(deliveryPointRepository.findById(deliveryPoint.getId())).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            deliveryPointService.updateDeliveryPoint(deliveryPointDto);
+        });
+
+        assertEquals("Deliverypoint not found with id:" + deliveryPointDto.id(), exception.getMessage());
+        verify(deliveryPointRepository, times(1)).findById(deliveryPoint.getId());
+    }
+
+    @Test
+    void testCheckPackageIsAllowed() {
+        boolean checker1 = deliveryPointService.checkPackageIsAllowed(1);
+        boolean checker2 = deliveryPointService.checkPackageIsAllowed(2);
+        boolean checker3 = deliveryPointService.checkPackageIsAllowed(3);
+
+        assertTrue(checker1);
+        assertTrue(checker2);
+        assertFalse(checker3);
+    }
+
+    @Test
+    void testCheckSackIsAllowed() {
+        boolean checker1 = deliveryPointService.checkSackIsAllowed(1);
+        boolean checker2 = deliveryPointService.checkSackIsAllowed(2);
+        boolean checker3 = deliveryPointService.checkSackIsAllowed(3);
+
+        assertTrue(checker2);
+        assertTrue(checker3);
+        assertFalse(checker1);
+    }
+
+    @Test
+    void testDeleteDeliveryPoint() {
+        Long deliveryPointId = 1L;
+        when(deliveryPointRepository.existsById(deliveryPointId)).thenReturn(false);
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            deliveryPointService.deleteDeliveryPoint(deliveryPointId);
+        });
+
+        assertEquals("Deliverypoint not found with id: " + deliveryPointId, exception.getMessage());
+        verify(deliveryPointRepository, never()).deleteById(deliveryPointId);
     }
 }
